@@ -22,5 +22,116 @@
 #                                                                              #
 ################################################################################
 
+L::C.define.merge! ({ # For some reason I need these parans around the hash.
+	VER_MAJOR: $version[0],
+	VER_MINOR: $version[1],
+	VER_PATCH: $version[2],
+})
+
 p = L::C.program 'path.c', 'path'
 L::Util.install p, 'bin/'
+
+$path_exe = p
+
+L::Test
+class TestPath < Minitest::Test
+	parallelize_me!
+	
+	rub_require $path_exe
+	
+	# Run path and check the output.
+	# 
+	# @param cmd An array of arguments to give to path.  Or a single string argument.
+	# @param expect A string that should match stdout or an array of lines to match.
+	def assert_returns(cmd, expect, msg=nil)
+		c = R::Command.new [$path_exe, *cmd]
+		c.run
+		
+		if expect.is_a? Array
+			expect = expect.join "\n"
+			expect << "\n"
+		end
+		
+		assert c.success?
+		assert_equal expect, c.stdout, msg
+	end
+	
+	def test_pass_through
+		assert_returns %w{foo}, %w{foo}, 'Passes through a path'
+		assert_returns %w{foo bar}, %w{foo bar}, 'Passes through multiple (two) paths'
+	end
+	
+	def test_none
+		assert_returns [], '', 'With no arguments prints nothing'
+		assert_returns '-E', '', 'With Extension action'
+		assert_returns '-F', '', 'With Full action'
+		assert_returns '-Bn', '', 'With Basename action and normalize.'
+		assert_returns '-a', '', 'When making absolute'
+	end
+	
+	def test_multi
+		assert_returns %w{foo bar}, %w{foo bar}, 'Handles multiple paths'
+		assert_returns %w{-E foo.ext barista.png}, %w{ext png}, 'Gets extension'
+		assert_returns %w{-a/tmp/ my/dir super/dir hahaha}, %w{/tmp/my/dir /tmp/super/dir /tmp/hahaha}, 'Makes absolute'
+		assert_returns %w{foo}, %w{foo}, 'Handles one'
+	end
+	
+	def test_full
+		assert_returns %w{test/path}, %w{test/path}, 'Full by default'
+		assert_returns %w{-F test/path}, %w{test/path}, 'Full by -F'
+		assert_returns %w{-FFF -F /abs/path}, %w{/abs/path}, 'Full multiple times works'
+		assert_returns %w{--Full trailing/slash/}, %w{trailing/slash/}, 'Keeps trailing slash'
+	end
+	
+	def test_last
+		assert_returns %w{-L my/path}, %w{path}
+		assert_returns %w{--Last a/path/}, %w{path}, 'with trailing slash'
+		assert_returns %w{--last path}, %w{path}
+		assert_returns %w{-L /abs/path.dir/}, %w{path.dir}, "with a '.' in the name"
+		assert_returns %w{-Ld trailing/slash/}, %w{}, '-d and trailing slash'
+		assert_returns %w{-Ld no/trailing/slash}, %w{slash}, '-d and no trailing slash'
+		assert_returns %w{-Lf trailing/slash/}, %w{slash}, '-f and trailing slash'
+		assert_returns %w{-Lf no/trailing/slash}, %w{slash}, '-f and no trailing slash'
+	end
+	
+	def test_basename
+		assert_returns %w{-B /my/file}, %w{file}, 'with short option'
+		assert_returns %w{--Basename /a/dir/}, %w{dir}, 'with long option'
+		assert_returns %w{--basename foo/bar.test}, %w{bar}, 'with lower-long option'
+		assert_returns %w{-B smart_ext.tar.gz}, %w{smart_ext}, 'with smart extension'
+		assert_returns %w{-Bs simple_ext.tar.gz}, %w{simple_ext.tar}, 'with simple extension handling'
+		assert_returns %w{-B smart.extension.txt.gz}, %w{smart.extension}, 'name with dots'
+	end
+	
+	def test_ext
+		assert_returns %w{-E file.ext}, %w{ext}
+		assert_returns %w{--Extension funny.file.ext}, %w{ext}, 'with dots'
+		assert_returns %w{--extension a/directory/notavirus.jpg}, %w{jpg}
+		assert_returns %w{-E /path/chrome.manifest}, %w{manifest}, 'long extension'
+		assert_returns %w{-E archive.tar.gz}, %w{tar.gz}, 'smart extension'
+		assert_returns %w{-Es archive.tar.gz}, %w{gz}, 'simple extension'
+	end
+	
+	def test_absolute
+		assert_returns %w{-a/tmp/myprog/ filename}, %w{/tmp/myprog/filename}
+		assert_returns %w{-a/tmp derp}, %w{/tmp/derp}
+		assert_returns %w{-narelative/path ../haha}, %w{relative/haha}
+	end
+	
+	def test_normalize
+		assert_returns %w{-n /my/path}, %w{/my/path}
+		assert_returns %w{-n /my/path/}, %w{/my/path/}
+		assert_returns %w{-n my/path}, %w{my/path}
+		assert_returns %w{-n my/path/}, %w{my/path/}
+		assert_returns %w{-n /my/../../../../path}, %w{/path}
+		assert_returns %w{-n /my/../../../../path/}, %w{/path/}
+		assert_returns %w{-n my/../../../path}, %w{../../path}
+		assert_returns %w{-n my/../../../path/}, %w{../../path/}
+		assert_returns %w{-n ./foo}, %w{foo}
+		assert_returns %w{-n /./foo}, %w{/foo}
+		assert_returns %w{-n /./foo/./}, %w{/foo/}
+		assert_returns %w{-n .hidden/}, %w{.hidden/}
+		assert_returns %w{-n /.secret/}, %w{/.secret/}
+		assert_returns %w{-n //foo/./bar/../baz/////././././../path/}, %w{/foo/path/}
+	end
+end
