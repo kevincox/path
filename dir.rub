@@ -116,6 +116,7 @@ class TestPath < Minitest::Test
 		assert_returns %w{-a/tmp/myprog/ filename}, %w{/tmp/myprog/filename}
 		assert_returns %w{-a/tmp derp}, %w{/tmp/derp}
 		assert_returns %w{-narelative/path ../haha}, %w{relative/haha}
+		assert_returns %w{-arelative/path /abs/path}, %w{/abs/path}, 'does nothing if already absolute'
 	end
 	
 	def test_normalize

@@ -39,7 +39,6 @@
 typedef enum {
 	RLOC_KEEP,
 	RLOC_ABS,
-	RLOC_REL,
 } Relocate;
 
 typedef enum {
@@ -91,7 +90,8 @@ static void help(char *argv1)
 		"    use the current directory.\n"
 		"  -r --relative[=to]\n"
 		"    Make the path relative to `to` if provided, otherwise the current\n"
-		"    directory.\n"
+		"    directory.  If provided the path must be absolute and normalized\n"
+		"    this implies -a."
 		"  -n --normalize\n"
 		"    Normalize the given path as much as possible.  (Remove '/./', '/../'\n"
 		"    '//' and similar.\n"
@@ -120,6 +120,8 @@ int main (int argc, char **argv)
 {
 	char *cwd = NULL;
 	char *delim = "\n";
+	unsigned rel = 0;
+	char *reldir = NULL;
 	
 	unsigned norm  = 0;
 	unsigned smart = 1;
@@ -178,8 +180,8 @@ int main (int argc, char **argv)
 			rloc = RLOC_ABS;
 			break;
 		case 'r':
-			//if (optarg) cwd = optarg;
-			rloc = RLOC_REL;
+			if (optarg) reldir = optarg;
+			rel = 1;
 			break;
 		case 'n':
 			norm = 1;
@@ -313,6 +315,41 @@ int main (int argc, char **argv)
 			if (abs) s--;
 		}
 		
+		if (rel)
+		{
+			size_t rellen = 0;
+			char *b = 0;
+			while (!reldir)
+			{
+				rellen += 1024;
+				b = ca(realloc(b, rellen));
+				reldir = getcwd(b, rellen);
+			}
+			i = reldir;
+			o = s;
+			while ( *i == *o )
+			{
+				if ( *i == '\0' || *s == '\0' ) break;
+				i++;
+				o++;
+			}
+			
+			while ( i > s && i[-1] != '/' )
+			{
+				i--;
+				o--;
+			}
+			
+			while ( i[1] != '\0' ) // +1 so that we don't read a trailing slash.
+			{
+				if ( *i == '/' ) fputs("../", stdout);
+				i++;
+			}
+			
+			printf("%s%s", o, delim);
+			break;
+		}
+		
 		if ( s == e )
 		{
 			printf("%s", delim);
@@ -323,11 +360,6 @@ int main (int argc, char **argv)
 		{
 			if ( slash == SLASH_NO && e[-1] == '/' )
 				e[-1] = '\0';
-			
-			if ( rloc == RLOC_REL )
-			{
-				//@TODO: implement.
-			}
 			
 			fputs(s, stdout);
 			
