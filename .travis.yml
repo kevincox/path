@@ -1,0 +1,27 @@
+language: c
+compiler:
+  - clang
+  - gcc
+
+install:
+ - cd ..
+ 
+ - sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental
+ - sudo apt-get update -y
+ - sudo apt-get install -y ruby2.0 ruby2.0-dev ruby2.0-doc
+ 
+ - sudo gem2.0 install sysexits
+ - sudo gem2.0 install xdg
+ - sudo gem2.0 install valid_array
+ - sudo gem2.0 install minitest
+ 
+ - git clone https://github.com/kevincox/rub.git
+ - cd rub
+ - sudo ruby2.0 bin/rub.rb :install
+ - cd ..
+ 
+ - cd path
+
+script:
+  # Run with sudo so we can access our gems.
+  - sudo ruby2.0 $(which rub) :test
