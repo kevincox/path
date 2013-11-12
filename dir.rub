@@ -135,4 +135,12 @@ class TestPath < Minitest::Test
 		assert_returns %w{-n /.secret/}, %w{/.secret/}
 		assert_returns %w{-n //foo/./bar/../baz/////././././../path/}, %w{/foo/path/}
 	end
+	
+	def test_relative
+		assert_returns %w{-r/home/kevincox/ /home/joe/}, %w{../joe/}
+		assert_returns %w{-r/home/kevincox/ /home/joe}, %w{../joe}
+		assert_returns %w{-r/home/kevincox /home/joe/}, %w{../joe/}
+		assert_returns %w{-r/home/kevincox /home/joe}, %w{../joe}
+		assert_returns %w{-r/home/kevincox /home/kevincox/file}, %w{file}
+	end
 end

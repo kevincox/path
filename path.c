@@ -122,6 +122,7 @@ int main (int argc, char **argv)
 	char *delim = "\n";
 	unsigned rel = 0;
 	char *reldir = NULL;
+	char *relend = NULL;
 	
 	unsigned norm  = 0;
 	unsigned smart = 1;
@@ -180,7 +181,13 @@ int main (int argc, char **argv)
 			rloc = RLOC_ABS;
 			break;
 		case 'r':
-			if (optarg) reldir = optarg;
+			if (optarg)
+			{
+				size_t l = strlen(optarg);
+				reldir = ca(malloc(l+2)); // Extra one for adding a slash.
+				memcpy(reldir, optarg, l);
+				relend = reldir+l;
+			}
 			rel = 1;
 			break;
 		case 'n':
@@ -315,6 +322,7 @@ int main (int argc, char **argv)
 			if (abs) s--;
 		}
 		
+		// Make relative.
 		if (rel)
 		{
 			size_t rellen = 0;
@@ -323,10 +331,22 @@ int main (int argc, char **argv)
 			{
 				rellen += 1024;
 				b = ca(realloc(b, rellen));
-				reldir = getcwd(b, rellen);
+				reldir = getcwd(b, rellen-1); // -1 is for trailing slash.
 			}
+			if (!relend) // We just allocated the current directory.
+			{
+				relend = reldir+strlen(reldir);
+			}
+			if ( relend[-1] != '/' )
+			{
+				*relend++ = '/';
+				*relend   = '\0';
+			}
+			
 			i = reldir;
 			o = s;
+			
+			// Skip a common prefix.
 			while ( *i == *o )
 			{
 				if ( *i == '\0' || *s == '\0' ) break;
@@ -334,20 +354,37 @@ int main (int argc, char **argv)
 				o++;
 			}
 			
-			while ( i > s && i[-1] != '/' )
+			// Go back to the last slash. (One before it actually).
+			while ( i > reldir && i[-1] != '/' )
 			{
 				i--;
 				o--;
 			}
 			
-			while ( i[1] != '\0' ) // +1 so that we don't read a trailing slash.
+			/*
+			 * This is the maximum buffer size we could use. Assuming a well
+			 * formed path the most expansion is from `/a/a/a/a/a/a/`, however
+			 * we don't enforce a well formed path so the worst case is 
+			 * `//////` which expands to `../../../../../` which is three times
+			 * the size.  So we allocate three times the size, plus the size of
+			 * the suffix, plus 1 for the null byte.
+			 */
+			s = e = ca(malloc((relend-i)*3 + e-o + 1));
+			
+			// Get relative portion.
+			while ( *++i != '\0' )
 			{
-				if ( *i == '/' ) fputs("../", stdout);
-				i++;
+				if ( *i == '/' )
+				{
+					*e++ = '.';
+					*e++ = '.';
+					*e++ = '/';
+				}
 			}
 			
-			printf("%s%s", o, delim);
-			break;
+			// Copy rest.
+			while ( *o != '\0' )
+				*e++ = *o++;
 		}
 		
 		if ( s == e )
