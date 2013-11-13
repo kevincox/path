@@ -1,5 +1,7 @@
 # path
 
+[![Build Status](https://api.travis-ci.org/kevincox/path.png?branch=master)](https://travis-ci.org/kevincox/path)
+
 `path` is a simple command for manipulating paths from shell scripts.  It takes
 paths as arguments and outputs them on stdout.  It is intended to be fast and
 simple.
