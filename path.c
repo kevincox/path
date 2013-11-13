@@ -184,6 +184,7 @@ int main (int argc, char **argv)
 			if (optarg)
 			{
 				size_t l = strlen(optarg);
+				free(reldir);
 				reldir = ca(malloc(l+2)); // Extra one for adding a slash.
 				memcpy(reldir, optarg, l);
 				relend = reldir+l;
@@ -369,10 +370,10 @@ int main (int argc, char **argv)
 			 * the size.  So we allocate three times the size, plus the size of
 			 * the suffix, plus 1 for the null byte.
 			 */
-			s = e = ca(malloc((relend-i)*3 + e-o + 1));
+			s = e = ca(malloc((relend-i)*3 + e-o + 1)); // Leaks, but who cares.
 			
 			// Get relative portion.
-			while ( *++i != '\0' )
+			while ( ++i < relend )
 			{
 				if ( *i == '/' )
 				{
@@ -385,6 +386,7 @@ int main (int argc, char **argv)
 			// Copy rest.
 			while ( *o != '\0' )
 				*e++ = *o++;
+			*e = '\0';
 		}
 		
 		if ( s == e )

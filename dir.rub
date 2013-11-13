@@ -144,3 +144,5 @@ class TestPath < Minitest::Test
 		assert_returns %w{-r/home/kevincox /home/kevincox/file}, %w{file}
 	end
 end
+
+# vim:ft=ruby

@@ -3,8 +3,8 @@ compiler:
   - clang
   - gcc
 env:
-  - R_DEBUG=-Ddebug
-  - R_DEBUG=
+  - R_ARGS=-Ddebug -Dc_flags+=-fsanitize=address -Dld_flags+=-fsanitize=address
+  - R_ARGS=
 
 install:
  - cd ..
