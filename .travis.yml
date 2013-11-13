@@ -2,6 +2,9 @@ language: c
 compiler:
   - clang
   - gcc
+env:
+  - R_DEBUG=-Ddebug
+  - R_DEBUG=
 
 install:
  - cd ..
@@ -24,4 +27,4 @@ install:
 
 script:
   # Run with sudo so we can access our gems.
-  - sudo ruby2.0 $(which rub) -Dc_compiler=$CC :test
+  - sudo ruby2.0 $(which rub) $R_DEBUG -Dc_compiler=$CC :test
