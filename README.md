@@ -38,5 +38,5 @@ path -a /my/dir bar/../../foo                      #-> /my/foo
 
 ## Building
 
-`path` uses the [Rub](https://github.com/kevincox/rub) build system.  `rub`d
+`path` uses the [Rub](https://github.com/kevincox/rub) build system.  `rub`
 should do it.  Run the tests with `rub :test` and install with `rub :install`.
