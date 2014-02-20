@@ -10,12 +10,12 @@ env:
 matrix:
   allow_failures:
     - env: ALLOW_FAIL=1
-  include:
-    - compiler: clang
-      env:
-        - secure: "QbrdW7YGyHagqa7+JjpJFv6KtGQpoGu8fCsaTg/r0C2mQIOr+hvxQSsjf4f48ZOIs9zXLLPiWc5ni06mXbjFa7ol3knTriTBK/zGt/ddmOFnA9K6+qUuc4CBlTJgmh9vYvKDUMZmAsnDSCaNI6yCoRqQUYkBTppibxBoOa7vUR4="
-        - R_ARGS=
-        - ALLOW_FAIL=1
+#  include:
+#    - compiler: clang
+#      env:
+#        - secure: "QbrdW7YGyHagqa7+JjpJFv6KtGQpoGu8fCsaTg/r0C2mQIOr+hvxQSsjf4f48ZOIs9zXLLPiWc5ni06mXbjFa7ol3knTriTBK/zGt/ddmOFnA9K6+qUuc4CBlTJgmh9vYvKDUMZmAsnDSCaNI6yCoRqQUYkBTppibxBoOa7vUR4="
+#        - R_ARGS=
+#        - ALLOW_FAIL=1
 
 install:
   - cd ..
@@ -40,12 +40,12 @@ script:
   # Run with sudo so we can access our gems.
   - sudo ruby2.0 $(which rub) $R_DEBUG -Dc_compiler=$CC :test
 
-addons:
-  coverity_scan:
-    project:
-      name: "kevincox/path"
-      description: "Path manipulation tool."
-    notification_email: kevincox@kevincox.ca
-    build_command_prepend:
-    build_command: sudo ruby2.0 $(which rub) $R_DEBUG -Dc_compiler=$CC :test
-    branch_pattern: master
+#addons:
+#  coverity_scan:
+#    project:
+#      name: "kevincox/path"
+#      description: "Path manipulation tool."
+#    notification_email: kevincox@kevincox.ca
+#    build_command_prepend:
+#    build_command: sudo ruby2.0 $(which rub) $R_DEBUG -Dc_compiler=$CC :install
+#    branch_pattern: master
