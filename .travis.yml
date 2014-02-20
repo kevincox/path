@@ -28,6 +28,7 @@ install:
   - sudo gem2.0 install xdg
   - sudo gem2.0 install valid_array
   - sudo gem2.0 install minitest
+  - sudo gem2.0 install facter
   
   - git clone https://github.com/kevincox/rub.git
   - cd rub
