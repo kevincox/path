@@ -3,28 +3,49 @@ compiler:
   - clang
   - gcc
 env:
-  - R_ARGS=-Ddebug -Dc_flags+=-fsanitize=address -Dld_flags+=-fsanitize=address
-  - R_ARGS=
+  global:
+  matrix:
+    - R_ARGS=-Ddebug -Dc_flags+=-fsanitize=address -Dld_flags+=-fsanitize=address
+    - R_ARGS=
+matrix:
+  allow_failures:
+    - env: ALLOW_FAIL=1
+  include:
+    - compiler: clang
+      env:
+        - secure: "QbrdW7YGyHagqa7+JjpJFv6KtGQpoGu8fCsaTg/r0C2mQIOr+hvxQSsjf4f48ZOIs9zXLLPiWc5ni06mXbjFa7ol3knTriTBK/zGt/ddmOFnA9K6+qUuc4CBlTJgmh9vYvKDUMZmAsnDSCaNI6yCoRqQUYkBTppibxBoOa7vUR4="
+        - R_ARGS=
+        - ALLOW_FAIL=1
 
 install:
- - cd ..
- 
- - sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental
- - sudo apt-get update -y
- - sudo apt-get install -y ruby2.0 ruby2.0-dev ruby2.0-doc
- 
- - sudo gem2.0 install sysexits
- - sudo gem2.0 install xdg
- - sudo gem2.0 install valid_array
- - sudo gem2.0 install minitest
- 
- - git clone https://github.com/kevincox/rub.git
- - cd rub
- - sudo ruby2.0 bin/rub.rb :install
- - cd ..
- 
- - cd path
+  - cd ..
+  
+  - sudo add-apt-repository -y ppa:brightbox/ruby-ng-experimental
+  - sudo apt-get update -y
+  - sudo apt-get install -y ruby2.0 ruby2.0-dev ruby2.0-doc
+  
+  - sudo gem2.0 install sysexits
+  - sudo gem2.0 install xdg
+  - sudo gem2.0 install valid_array
+  - sudo gem2.0 install minitest
+  
+  - git clone https://github.com/kevincox/rub.git
+  - cd rub
+  - sudo ruby2.0 bin/rub.rb :install
+  - cd ..
+  
+  - cd path
 
 script:
   # Run with sudo so we can access our gems.
   - sudo ruby2.0 $(which rub) $R_DEBUG -Dc_compiler=$CC :test
+
+addons:
+  coverity_scan:
+    project:
+      name: "kevincox/path"
+      description: "Path manipulation tool."
+    notification_email: kevincox@kevincox.ca
+    build_command_prepend:
+    build_command: sudo ruby2.0 $(which rub) $R_DEBUG -Dc_compiler=$CC :test
+    branch_pattern: master
